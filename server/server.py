@@ -1,7 +1,7 @@
 from socketserver import StreamRequestHandler, TCPServer
 from time import sleep
 
-from tools.kv_tools import validate_ip_port
+from tools.general_tools import validate_ip_port
 
 
 class RequestHandler(StreamRequestHandler):
@@ -10,7 +10,7 @@ class RequestHandler(StreamRequestHandler):
         while True:
             if not self.rfile.peek():
                 break
-            sleep(10)
+            sleep(5)
             data = self.rfile.readline().strip()
             print("{} wrote: {}".format(self.client_address[0], data))
             # Likewise, self.wfile is a file-like object used to write back
