@@ -131,3 +131,7 @@ dmypy.json
 # Ignore editors/IDEs generated files
 .vscode
 .idea
+
+dataset.txt
+servers.txt
+keyFile.txt
