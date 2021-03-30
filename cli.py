@@ -3,8 +3,8 @@ import click
 from data_generator.data_generator import generated_key_value_pairs
 from broker.broker import KeyValueBroker
 from server.server import KeyValueServer
-from tools.cli_tools import file_to_list, list_of_dicts_to_file
-from tools.kv_tools import validate_ip_port
+from tools.general_tools import file_to_list, list_of_dicts_to_file, validate_ip_port, parse_command, \
+    read_servers_from_file, CustomValidationException, serialize_data_from_file
 
 
 @click.group()
@@ -47,15 +47,29 @@ def kv_server(a, p):
     server.serve()
 
 
-# @click.option('-s', prompt=True, required=True, type=click.File(), help='File that indicates the servers to connect')
-# @click.option('-i', prompt=True, required=True, type=click.File(), help='File that contains data to store')
-# @click.option('-k', prompt=True, required=True, type=click.INT, help='Replication factor, how many different'
-#                                                                      'servers will have the same replicated data')
+@click.option('-s', prompt=True, required=True, type=click.File(), help='File that indicates the servers to connect')
+@click.option('-i', prompt=True, required=True, type=click.File(), help='File that contains data to store')
+@click.option('-k', prompt=True, required=True, type=click.INT, help='Replication factor, how many different'
+                                                                     'servers will have the same replicated data')
 @cli.command()
-def kv_broker():
-    servers = [('127.0.0.1', 5000), ('127.0.0.1', 5001)]
-    broker = KeyValueBroker(servers=servers, replication_factor=1)
-    broker.send_request_to_servers()
+def kv_broker(s, i, k):
+    servers = read_servers_from_file(s)
+    print(f'Servers to connect: {servers}')
+    if not 1 < k <= len(servers):
+        print(f'-k should be between 1 to {len(servers)}')
+        exit(1)
+    serialized_data_to_index = serialize_data_from_file(i)
+    broker = KeyValueBroker(servers=servers, replication_factor=k)
+    broker.index_procedure(serialized_data_to_index)
+
+    # while True:
+    #     user_command = click.prompt('>', type=click.STRING)
+    #     try:
+    #         parse_command(user_command)
+    #         broker.send_request_to_servers()
+    #     except CustomValidationException as e:
+    #         print(e)
+    #         continue
 
 
 if __name__ == '__main__':
