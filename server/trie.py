@@ -66,11 +66,11 @@ class Trie:
 
         return node.value if node and node.is_terminal else None
 
-    def dfs(self, node: TrieNode, prefix: str, item_list: dict) -> None:
-        """ Depth First Search recursive method that returns a list of all the keys, values given a starting node
+    def dfs(self, node: TrieNode, prefix: str, items_dict: dict) -> None:
+        """ Depth First Search recursive method that returns a dict of all the keys, values given a starting node
         :param node: A node to start
         :param prefix: The prefix that is built upon the recursion
-        :param item_list: The list that contains key value pairs passed as param to built through the recursion
+        :param items_dict: The list that contains key value pairs passed as param to built through the recursion
         :return: The final list that contains all the key value pairs of the trie
         """
         if node.is_terminal:
@@ -79,9 +79,9 @@ class Trie:
                 items_ = dict()
                 self.dfs(node.value.root, '', items_)
                 val = items_
-            item_list.update({prefix: val})
+            items_dict.update({prefix: val})
         for child in node.children:
-            self.dfs(node.children.get(child), prefix + child, item_list)
+            self.dfs(node.children.get(child), prefix + child, items_dict)
 
     def search_by_keys(self, keys: List) -> Union[dict, str]:
         """ Given a list of keys search iteratively from the 1st tier trie to all the nested tries.
