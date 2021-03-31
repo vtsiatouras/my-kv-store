@@ -1,10 +1,11 @@
+import sys
 import click
 
 from data_generator.data_generator import generated_key_value_pairs
 from broker.broker import KeyValueBroker
 from server.server import KeyValueServer
-from tools.general_tools import file_to_list, list_of_dicts_to_file, validate_ip_port, parse_command, \
-    read_servers_from_file, CustomValidationException, serialize_data_from_file
+from tools.general_tools import read_keys_and_types_from_file, list_of_dicts_to_file, validate_ip_port, parse_command, \
+    read_servers_from_file, CustomValidationException, read_data_from_file
 
 
 @click.group()
@@ -31,11 +32,15 @@ def cli():
 def create_data(n, d, m, l, k):
     click.echo('Creating data')
     click.echo(f'n: {n}, d: {d}, m: {m}, l: {l}, k: {k}')
-    fields_list = file_to_list(k)
-    print(fields_list)
-    generated_key_values = generated_key_value_pairs(number_of_lines=n, level_of_nesting=d, max_number_of_keys=m,
-                                                     max_word_length=l, key_names=fields_list)
-    list_of_dicts_to_file(generated_key_values)
+    try:
+        fields_list = read_keys_and_types_from_file(k)
+        print(fields_list)
+        generated_key_values = generated_key_value_pairs(number_of_lines=n, level_of_nesting=d, max_number_of_keys=m,
+                                                         max_word_length=l, key_names=fields_list)
+        list_of_dicts_to_file(generated_key_values)
+    except CustomValidationException as e:
+        print(e)
+        exit(1)
 
 
 @click.option('-a', prompt=True, required=True, type=click.STRING, help='The IP address')
@@ -48,28 +53,32 @@ def kv_server(a, p):
 
 
 @click.option('-s', prompt=True, required=True, type=click.File(), help='File that indicates the servers to connect')
-@click.option('-i', prompt=True, required=True, type=click.File(), help='File that contains data to store')
+@click.option('-i', required=False, type=click.File(), help='File that contains data to store')
 @click.option('-k', prompt=True, required=True, type=click.INT, help='Replication factor, how many different'
                                                                      'servers will have the same replicated data')
 @cli.command()
 def kv_broker(s, i, k):
     servers = read_servers_from_file(s)
     print(f'Servers to connect: {servers}')
-    if not 1 < k <= len(servers):
-        print(f'-k should be between 1 to {len(servers)}')
+    if not 1 <= k <= len(servers):
+        print(f'-k should be between 1 to {len(servers)}', file=sys.stderr)
         exit(1)
-    serialized_data_to_index = serialize_data_from_file(i)
-    broker = KeyValueBroker(servers=servers, replication_factor=k)
-    broker.index_procedure(serialized_data_to_index)
 
-    # while True:
-    #     user_command = click.prompt('>', type=click.STRING)
-    #     try:
-    #         parse_command(user_command)
-    #         broker.send_request_to_servers()
-    #     except CustomValidationException as e:
-    #         print(e)
-    #         continue
+    broker = KeyValueBroker(servers=servers, replication_factor=k)
+
+    if i:
+        serialized_data_to_index = read_data_from_file(i)
+        broker.index_procedure(serialized_data_to_index)
+
+    while True:
+        user_command = click.prompt('>', type=click.STRING)
+        broker.print_servers_warning()
+        try:
+            serialized_cmd = parse_command(user_command)
+            broker.execute_command(*serialized_cmd)
+        except CustomValidationException as e:
+            print(e, file=sys.stderr)
+            continue
 
 
 if __name__ == '__main__':

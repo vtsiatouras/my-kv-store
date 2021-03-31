@@ -1,5 +1,8 @@
 import socket
+import click
+import time
 import multiprocessing as mp
+import threading as td
 
 from typing import List
 from random import sample
@@ -14,24 +17,43 @@ class KeyValueBroker:
 
         self.servers = servers
         self.replication_factor = replication_factor
+        self.online_servers = []
 
-    def send_request_to_servers(self, data):
-        # Choose k random servers
-        random_servers = sample(self.servers, k=self.replication_factor)
-        # Send requests in parallel
-        processes = 4
-        with mp.Pool(processes=processes) as p:
-            params = [(ip, port, data) for ip, port in random_servers]
-            results = p.map(self.send, params)
-            print(results)
+        t = td.Thread(name='daemon-server-watchdog', target=self.__server_watchdog)
+        t.setDaemon(True)
+        t.start()
 
-    def index_procedure(self, data: List[tuple]):
-        for line in data:
-            payload = f'PUT {line}'
-            self.send_request_to_servers(payload)
+        # Make sure that we have at least k servers online before continuing
+        while len(self.online_servers) < self.replication_factor:
+            continue
+
+    def __server_watchdog(self) -> None:
+        """ Daemon function that checks the given servers are online. Performs a connect operation to each of them
+        periodically and stores the online servers to the self.online_servers list.
+        :return: None
+        """
+        while True:
+            for server in self.servers:
+                ip, port = server
+                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                    try:
+                        # Connect to server and send data
+                        sock.connect((ip, port))
+                        if server not in self.online_servers:
+                            self.online_servers.append(server)
+                    except ConnectionRefusedError:
+                        if server in self.online_servers:
+                            self.online_servers.remove(server)
+
+            time.sleep(5)
 
     @staticmethod
-    def send(args):
+    def __send(args):
+        """
+
+        :param args:
+        :return:
+        """
         ip, port, data = args
         print(ip, port)
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
@@ -50,10 +72,59 @@ class KeyValueBroker:
                         received = str(received, "utf-8")
                         break
 
+                return received
+
             except ConnectionRefusedError:
                 print(f'Server with IP: {ip} at port: {port} refused to connect')
                 return 'CONNECTION REFUSED'
 
-            finally:
-                print("Sent:     {}".format(data))
-                print("Received: {}".format(received))
+    # TODO return results
+    def __send_request_to_servers(self, payload: str, all_servers: bool = True, processes: int = 4):
+        """ Sends a given request to the servers. The send procedure executes in parallel to the servers in order to
+        avoid an iterative approach. This is necessary because we don't maintain the connection to servers throughout
+        the whole runtime of the broker, but we invoke new connections when a new request is inserted.
+        :param payload: The payload in str in format <CMD> <str(DATA: dict)>
+        :param all_servers: Flag that indicates if the operation will be applied to all servers or to some of them
+        (replication factor)
+        :param processes: The number of parallel processes to execute simultaneously to many servers
+        :return:
+        """
+        print(self.online_servers)
+        servers_ = self.online_servers
+        # Choose k random servers
+        if not all_servers and len(self.online_servers) >= self.replication_factor:
+            servers_ = sample(servers_, k=self.replication_factor)
+        # Send requests in parallel
+        with mp.Pool(processes=processes) as p:
+            params = [(ip, port, payload) for ip, port in servers_]
+            results = p.map(self.__send, params)
+            print(results)
+
+    def print_servers_warning(self) -> None:
+        """ Prints an alert message when the available online servers are less than the replication factor threshold.
+        THE METHOD IS CALLED AT THE CLI AFTER THE USER INPUT IN ORDER TO AVOID UGLY PRINTS!!
+        :return: None
+        """
+        if len(self.online_servers) < self.replication_factor:
+            msg = click.style('WARNING: online servers: {}!'.format(len(self.online_servers)), fg='red')
+            print(f'{msg : >50}')
+
+    def execute_command(self, command: str, data: dict) -> None:
+        """ Executes a parsed command from the CLI
+        :param command: The validated command
+        :param data: The validated data in dictionary type
+        :return: None
+        """
+        if command == 'PUT':
+            self.__send_request_to_servers(f'{command} {data}', all_servers=False)
+        else:
+            self.__send_request_to_servers(f'{command} {data}', all_servers=True)
+
+    def index_procedure(self, data: List[tuple]) -> None:
+        """ Performs indexing operation when a data file is given
+        :param data: The validated list of tuples that contains the data
+        :return: None
+        """
+        for line in data:
+            payload = f'PUT {line}'
+            self.__send_request_to_servers(payload, all_servers=False)
