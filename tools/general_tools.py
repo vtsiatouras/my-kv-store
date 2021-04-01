@@ -1,6 +1,6 @@
 import ast
 
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 from socket import inet_aton, error as socket_error
 
 
@@ -46,7 +46,13 @@ def parse_command(command: str) -> Tuple:
     if command_parts[0] not in ['GET', 'QUERY', 'DELETE', 'PUT']:
         raise CustomValidationException('Available commands are: "GET", "QUERY", "DELETE", "PUT"')
 
-    return command_parts[0], data_string_to_dict(command_parts[1])
+    if command_parts[0] == 'PUT':
+        return command_parts[0], data_string_to_dict(command_parts[1])
+    else:
+        data_list = data_string_to_list(command_parts[1])
+        if command_parts[0] in ['GET', 'DELETE'] and len(data_list) > 1:
+            raise CustomValidationException(f'{command_parts[0]} accepts only one key as parameter')
+        return command_parts[0], data_list
 
 
 def read_data_from_file(file) -> List:
@@ -102,17 +108,25 @@ def read_servers_from_file(file) -> List[tuple]:
     return servers
 
 
-def data_string_to_dict(string: str) -> dict:
+def data_string_to_list(string_data: str) -> List:
+    """ Transforms a data string of the form key1.key2.key3 to list. Validation checks are applied here.
+    :param string_data: The data string
+    :return: The serialized data as a single list
+    """
+    return string_data.split('.')
+
+
+def data_string_to_dict(string_data: str,) -> Dict:
     """ Transforms a data string of the form 'person1': {'height': 1.75; 'profession': 'student'} to dictionary.
     Validation checks are applied here.
-    :param string: The data string
-    :return: The serialized data to dictionary
+    :param string_data: The data string
+    :return: The serialized data as a single dictionary
     """
-    str_dict = '{' + string + '}'
+    str_dict = '{' + string_data + '}'
     str_dict = str_dict.replace(';', ',')
     try:
         dictionary = ast.literal_eval(str_dict)
-    except (ValueError, SyntaxError) as e:
+    except (ValueError, SyntaxError, TypeError) as e:
         raise CustomValidationException(e)
     if type(dictionary) is not dict:
         raise CustomValidationException('Data should be complaint to the following pattern\n'
