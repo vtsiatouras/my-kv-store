@@ -4,7 +4,7 @@ import time
 import multiprocessing as mp
 import threading as td
 
-from typing import List
+from typing import List, Union
 from random import sample
 from tools.general_tools import validate_ip_port
 
@@ -48,11 +48,10 @@ class KeyValueBroker:
             time.sleep(5)
 
     @staticmethod
-    def __send(args):
-        """
-
-        :param args:
-        :return:
+    def __send__(args):
+        """ Sends a command to a server and collects the response
+        :param args: Tuple, unpack to ip, port, payload
+        :return: The response of the server
         """
         ip, port, data = args
         print(ip, port)
@@ -83,7 +82,7 @@ class KeyValueBroker:
         """ Sends a given request to the servers. The send procedure executes in parallel to the servers in order to
         avoid an iterative approach. This is necessary because we don't maintain the connection to servers throughout
         the whole runtime of the broker, but we invoke new connections when a new request is inserted.
-        :param payload: The payload in str in format <CMD> <str(DATA: dict)>
+        :param payload: The payload in str in format <CMD> <str(DATA: dict/list)>
         :param all_servers: Flag that indicates if the operation will be applied to all servers or to some of them
         (replication factor)
         :param processes: The number of parallel processes to execute simultaneously to many servers
@@ -97,7 +96,7 @@ class KeyValueBroker:
         # Send requests in parallel
         with mp.Pool(processes=processes) as p:
             params = [(ip, port, payload) for ip, port in servers_]
-            results = p.map(self.__send, params)
+            results = p.map(self.__send__, params)
             print(results)
 
     def print_servers_warning(self) -> None:
@@ -109,7 +108,7 @@ class KeyValueBroker:
             msg = click.style('WARNING: online servers: {}!'.format(len(self.online_servers)), fg='red')
             print(f'{msg : >50}')
 
-    def execute_command(self, command: str, data: dict) -> None:
+    def execute_command(self, command: str, data: Union[dict, list]) -> None:
         """ Executes a parsed command from the CLI
         :param command: The validated command
         :param data: The validated data in dictionary type
