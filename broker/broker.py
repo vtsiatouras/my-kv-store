@@ -91,8 +91,8 @@ class KeyValueBroker:
 
                 return received
 
-            except ConnectionRefusedError:
-                print(f"Server with IP: {ip} at port: {port} refused to connect")
+            except (ConnectionRefusedError, ConnectionResetError) as e:
+                print(f"Server with IP: {ip} at port: {port}\n{e}")
                 return "CONNECTION REFUSED"
 
     def __send_request_to_servers(
