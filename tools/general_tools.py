@@ -1,4 +1,5 @@
 import ast
+import click
 
 from typing import List, Tuple, Dict
 from socket import inet_aton, error as socket_error
@@ -188,3 +189,7 @@ def list_of_dicts_to_file(list_of_dicts: List[dict]) -> None:
             # Cast dict to str & remove curly braces from the start and the end
             line = str(dictionary)[1:-1].replace(",", ";")
             outfile.write(f"{line}\n")
+
+
+def print_warning_messages(message: str) -> None:
+    click.echo(click.style(message, fg="red"))

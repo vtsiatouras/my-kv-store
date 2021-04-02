@@ -1,3 +1,4 @@
+import sys
 from socketserver import StreamRequestHandler, TCPServer
 from typing import Tuple, Any
 
@@ -54,5 +55,5 @@ class KeyValueServer(TCPServer):
             else:
                 return "ERROR"
         except CustomValidationException as e:
-            print(e)
+            print(e, file=sys.stderr)
             return "ERROR"

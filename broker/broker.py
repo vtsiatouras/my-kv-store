@@ -1,12 +1,11 @@
 import socket
-import click
 import time
 import multiprocessing as mp
 import threading as td
 
 from typing import List, Union
 from random import sample
-from tools.general_tools import validate_ip_port
+from tools.general_tools import validate_ip_port, print_warning_messages
 
 
 class KeyValueBroker:
@@ -123,11 +122,11 @@ class KeyValueBroker:
         :return: None
         """
         if len(self.online_servers) < self.replication_factor:
-            msg = click.style(
-                "WARNING: online servers: {}!".format(len(self.online_servers)),
-                fg="red",
+            print_warning_messages(
+                "WARNING: online servers: {}/{}".format(
+                    len(self.online_servers), len(self.servers)
+                )
             )
-            click.echo(msg)
 
     def execute_command(self, command: str, data: Union[dict, list]) -> None:
         """Executes a parsed command from the CLI
@@ -143,13 +142,11 @@ class KeyValueBroker:
         else:
             # Prevent delete operation when we have even one server down!
             if command == "DELETE" and (self.online_servers != self.servers):
-                msg = click.style(
-                    "WARNING: online servers: {}! ABORTING DELETE OPERATION".format(
-                        len(self.online_servers)
-                    ),
-                    fg="red",
+                print_warning_messages(
+                    "WARNING: online servers: {}/{} ABORTING DELETE OPERATION".format(
+                        len(self.online_servers), len(self.servers)
+                    )
                 )
-                click.echo(msg)
                 # Resume daemon
                 self.__resume_watchdog()
                 return
