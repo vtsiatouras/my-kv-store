@@ -67,7 +67,7 @@ class Trie:
         return node.value if node and node.is_terminal else None
 
     def dfs(self, node: TrieNode, prefix: str, items_dict: dict) -> None:
-        """ Depth First Search recursive method that returns a dict of all the keys, values given a starting node
+        """ Depth First Search recursive method that returns a dict of all the keys/values given a starting node
         :param node: A node to start
         :param prefix: The prefix that is built upon the recursion
         :param items_dict: The list that contains key value pairs passed as param to built through the recursion
@@ -117,36 +117,3 @@ class Trie:
                 trie_.insert_dict(value)
                 value = trie_
             trie_index.insert(key, value)
-
-
-############################################################################
-if __name__ == '__main__':
-    trie = Trie()
-    trie.insert_dict({'test': {'nested_key': 'val1'}})
-    trie.insert_dict({'test2': {'nested_key': 'val2'}})
-    trie.insert_dict({'text': {'nested_key': 'another val'}})
-    trie.insert_dict({'asdf': {'nested_key': {'subnested_key': 'value', 'subnested_key2': 'value2',
-                                              'subnested_key3': 'value2'}, 'subnested_key': 'value'}})
-
-    items = {}
-    trie.dfs(trie.root, '', items)
-    print(items)
-
-    print(trie.search_by_keys(['asdf']))
-    print(trie.search_by_keys(['asdf', 'nested_key']))
-    print(trie.search_by_keys(['asdf', 'nested_key', 'subnested_key2']))
-    print(trie.search_by_keys(['asdf', 'nested_key', 'subnested_key2sasasa']))
-    print(trie.search_by_keys(['asdadasdf']))
-    print(trie.search_by_keys(['asdf', 'dasdadas']))
-
-    if trie.delete('text'):
-        print('deleted')
-    if not trie.delete('asdasdfa'):
-        print('not deleted')
-
-    print(trie.search('test'))
-    print(trie.search('test2'))
-    print(trie.search('text'))
-    print(trie.search('asdf'))
-    print(trie.search('NOt exist'))
-    print(trie.search('123134124'))
