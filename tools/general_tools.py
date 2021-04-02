@@ -147,9 +147,7 @@ def data_string_to_list(string_data: str) -> List:
     return string_data.split(".")
 
 
-def data_string_to_dict(
-    string_data: str,
-) -> Dict:
+def data_string_to_dict(string_data: str) -> Dict:
     """Transforms a data string of the form 'person1': {'height': 1.75; 'profession': 'student'} to dictionary.
     Validation checks are applied here.
     :param string_data: The data string
