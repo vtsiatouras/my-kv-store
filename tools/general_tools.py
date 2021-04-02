@@ -39,8 +39,8 @@ def validate_ip_port(ip_address: str, port: str) -> None:
 def parse_command(command: str) -> Tuple:
     """ Parses a given command and checks for errors. Returns a tuple: (<CMD>, <DATA>)
     :param command: The given command
-    :return: A tuple that at 0 index is placed the command in str ('GET', 'PUT', etc.) & at 1 index is placed input
-    data serialized to dictionary
+    :return: A tuple that at 0 index is placed the command in str ('GET', 'PUT', etc.) & at 1 index is placed
+    serialized input data
     """
     command_parts = command.split(' ', 1)
     if command_parts[0] not in ['GET', 'QUERY', 'DELETE', 'PUT']:
@@ -53,6 +53,26 @@ def parse_command(command: str) -> Tuple:
         if command_parts[0] in ['GET', 'DELETE'] and len(data_list) > 1:
             raise CustomValidationException(f'{command_parts[0]} accepts only one key as parameter')
         return command_parts[0], data_list
+
+
+def parse_command_for_server(command: str) -> Tuple:
+    """ Parses a socket level command and checks for errors. Returns a tuple: (<CMD>, <DATA>)
+    :param command: The given command
+    :return: A tuple that at 0 index is placed the command in str ('GET', 'PUT', etc.) & at 1 index is placed
+    serialized input data
+    """
+    command_parts = command.split(' ', 1)
+    if command_parts[0] not in ['GET', 'QUERY', 'DELETE', 'PUT']:
+        raise CustomValidationException('Available commands are: "GET", "QUERY", "DELETE", "PUT"')
+    try:
+        data = ast.literal_eval(command_parts[1])
+        if (command_parts[0] == 'PUT' and type(data) is dict) or \
+                (command_parts[0] in ['GET', 'DELETE', 'QUERY'] and type(data) is list):
+            return command_parts[0], data
+        else:
+            raise CustomValidationException('Malformed data received')
+    except (ValueError, SyntaxError, TypeError) as e:
+        raise CustomValidationException(e)
 
 
 def read_data_from_file(file) -> List:
