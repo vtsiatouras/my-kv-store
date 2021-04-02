@@ -48,7 +48,7 @@ def create_data(n, d, m, l, k):
 @cli.command()
 def kv_server(a, p):
     validate_ip_port(ip_address=a, port=p)
-    server = KeyValueServer(ip_address=a, port=p)
+    server = KeyValueServer(server_address=(a, p))
     server.serve()
 
 
@@ -67,11 +67,13 @@ def kv_broker(s, i, k):
     broker = KeyValueBroker(servers=servers, replication_factor=k)
 
     if i:
+        click.echo('Reading data from file...')
         serialized_data_to_index = read_data_from_file(i)
+        click.echo('Sending data to servers...')
         broker.index_procedure(serialized_data_to_index)
 
     while True:
-        user_command = click.prompt('>', type=click.STRING)
+        user_command = input(">: ")
         broker.print_servers_warning()
         try:
             serialized_cmd = parse_command(user_command)
