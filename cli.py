@@ -10,8 +10,9 @@ from tools.general_tools import (
     validate_ip_port,
     parse_command,
     read_servers_from_file,
-    CustomValidationException,
     read_data_from_file,
+    CustomValidationException,
+    CustomBrokerConnectionException,
 )
 
 
@@ -77,7 +78,7 @@ def create_data(n, d, m, l, k):
         list_of_dicts_to_file(generated_key_values)
     except CustomValidationException as e:
         print(e)
-        exit(1)
+        sys.exit(1)
 
 
 @click.option(
@@ -115,9 +116,13 @@ def kv_broker(s, i, k):
     print(f"Servers to connect: {servers}")
     if not 1 <= k <= len(servers):
         print(f"-k should be between 1 to {len(servers)}", file=sys.stderr)
-        exit(1)
+        sys.exit(1)
 
-    broker = KeyValueBroker(servers=servers, replication_factor=k)
+    try:
+        broker = KeyValueBroker(servers=servers, replication_factor=k)
+    except CustomBrokerConnectionException as e:
+        print(f"{e}", file=sys.stderr)
+        sys.exit(1)
 
     if i:
         click.echo("Reading data from file...")
@@ -130,7 +135,8 @@ def kv_broker(s, i, k):
         broker.print_servers_warning()
         try:
             serialized_cmd = parse_command(user_command)
-            broker.execute_command(*serialized_cmd)
+            result = broker.execute_command(*serialized_cmd)
+            click.echo(result)
         except CustomValidationException as e:
             print(e, file=sys.stderr)
             continue

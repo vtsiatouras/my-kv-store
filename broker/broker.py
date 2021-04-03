@@ -3,9 +3,14 @@ import time
 import multiprocessing as mp
 import threading as td
 
-from typing import List, Union
+from typing import List, Union, Optional
 from random import sample
-from tools.general_tools import validate_ip_port, print_warning_messages
+from tools.general_tools import (
+    validate_ip_port,
+    print_warning_messages,
+    merge_server_results,
+    CustomBrokerConnectionException,
+)
 
 
 class KeyValueBroker:
@@ -17,8 +22,13 @@ class KeyValueBroker:
         self.replication_factor = replication_factor
         self.online_servers = []
 
+        # Check that the given servers are reachable
+        self.__servers_check(raise_connection_error=True)
+
+        # Processes Pool that will be used to assign parallel requests to servers
         self.pool = mp.Pool(processes=4)
 
+        # Initiating thread for checking the health of the servers
         self.pause_daemon = False
         self.pause_cond = td.Condition(td.Lock())
         self.daemon = td.Thread(
@@ -26,35 +36,22 @@ class KeyValueBroker:
         )
         self.daemon.start()
 
-        # Make sure that we have at least k servers online before continuing
+        # Make sure that we have at least k servers online before continuing.
         while len(self.online_servers) < self.replication_factor:
             continue
 
     def __server_watchdog(self) -> None:
-        """Daemon function that checks the given servers are online. Performs a connect operation to each of them
-        periodically and stores the online servers to the self.online_servers list.
+        """Daemon function that checks the given servers are online.
         :return: None
         """
-
         while True:
-
+            # Pause Condition Variable
             with self.pause_cond:
                 while self.pause_daemon:
                     self.pause_cond.wait()
-
-            for server in self.servers:
-                ip, port = server
-                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-                    try:
-                        # Connect to server and send data
-                        sock.connect((ip, port))
-                        if server not in self.online_servers:
-                            self.online_servers.append(server)
-                    except ConnectionRefusedError:
-                        if server in self.online_servers:
-                            self.online_servers.remove(server)
-
-            time.sleep(0.5)
+            # Server checking
+            self.__servers_check(raise_connection_error=False)
+            time.sleep(2)
 
     def __pause_watchdog(self) -> None:
         self.pause_daemon = True
@@ -64,6 +61,25 @@ class KeyValueBroker:
         self.pause_daemon = False
         self.pause_cond.notify()
         self.pause_cond.release()
+
+    def __servers_check(self, raise_connection_error: bool = False) -> None:
+        """Performs a connect operation to each of them periodically and stores the online servers to the
+        self.online_servers list.
+        :return: None
+        """
+        for server in self.servers:
+            ip, port = server
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                try:
+                    # Connect to server and send data
+                    sock.connect((ip, port))
+                    if server not in self.online_servers:
+                        self.online_servers.append(server)
+                except (ConnectionRefusedError, ConnectionResetError) as e:
+                    if raise_connection_error:
+                        raise CustomBrokerConnectionException(f'Server {ip}:{port} not reachable.\n{e}')
+                    if server in self.online_servers:
+                        self.online_servers.remove(server)
 
     @staticmethod
     def __send__(args):
@@ -92,7 +108,7 @@ class KeyValueBroker:
                 return received
 
             except (ConnectionRefusedError, ConnectionResetError) as e:
-                print(f"Server with IP: {ip} at port: {port}\n{e}")
+                print(f"Server {ip}:{port} not reachable\n{e}")
                 return "CONNECTION REFUSED"
 
     def __send_request_to_servers(
@@ -113,7 +129,6 @@ class KeyValueBroker:
         # Send requests in parallel
         params = [(ip, port, payload) for ip, port in servers_]
         results = self.pool.map(self.__send__, params)
-        print(results)
         return results
 
     def print_servers_warning(self) -> None:
@@ -128,17 +143,19 @@ class KeyValueBroker:
                 )
             )
 
-    def execute_command(self, command: str, data: Union[dict, list]) -> None:
+    def execute_command(self, command: str, data: Union[dict, list]) -> Optional[str]:
         """Executes a parsed command from the CLI
         :param command: The validated command
         :param data: The validated data in dictionary type
-        :return: None
+        :return: The result
         """
         # Stop daemon server watchdog
         self.__pause_watchdog()
 
         if command == "PUT":
-            self.__send_request_to_servers(f"{command} {data}", all_servers=False)
+            results = self.__send_request_to_servers(
+                f"{command} {data}", all_servers=False
+            )
         else:
             # Prevent delete operation when we have even one server down!
             if command == "DELETE" and (self.online_servers != self.servers):
@@ -149,12 +166,16 @@ class KeyValueBroker:
                 )
                 # Resume daemon
                 self.__resume_watchdog()
-                return
+                return None
 
-            self.__send_request_to_servers(f"{command} {data}", all_servers=True)
+            results = self.__send_request_to_servers(
+                f"{command} {data}", all_servers=True
+            )
 
         # Resume daemon
         self.__resume_watchdog()
+
+        return merge_server_results(results)
 
     def index_procedure(self, data: List[tuple]) -> None:
         """Performs indexing operation when a data file is given
