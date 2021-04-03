@@ -7,7 +7,7 @@ from typing import List, Union
 def get_values(value_type: str, max_word_length: int) -> Union[str, int, float]:
     """Returns a random value to be assigned for a key
     :param value_type: The type of the value
-    :param max_word_length: If the type is 'string' this defines the max length
+    :param max_word_length: If the type is 'string' this defines the max length of the created word
     :return: The value
     """
     if value_type == "int":
@@ -46,8 +46,8 @@ def create_dictionary(
             if key_w_type[0] not in dictionary:
                 break
 
-        # Insert value or a nested dict. Nested dict should be created if we have available level nesting and then
-        # if the random number is below 0.35 in order to avoid too many nested dicts
+        # Insert value or a nested dict. Nested dict should be created if we have available level nesting and
+        # the random number is below 0.35 in order to avoid too many nested dicts
         if current_level < level_of_nesting and random() < 0.35:
             dictionary[key_w_type[0]] = create_dictionary(
                 level_of_nesting,
