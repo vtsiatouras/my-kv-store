@@ -31,7 +31,11 @@ class KeyValueServer(TCPServer):
         self.trie_index = Trie()
 
     def serve(self):
-        self.serve_forever()
+        try:
+            self.serve_forever()
+        except KeyboardInterrupt:
+            pass
+        self.server_close()
 
     def process_command(self, client_address: Any, payload: str) -> str:
         try:
