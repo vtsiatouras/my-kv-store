@@ -54,7 +54,7 @@ class KeyValueBroker:
                     self.pause_cond.wait()
             # Server checking
             self.__servers_check(raise_connection_error=False)
-            time.sleep(10)
+            time.sleep(2)
 
     def __pause_watchdog(self) -> None:
         """Pauses daemon service
