@@ -120,7 +120,7 @@ def kv_broker(s, i, k):
 
     try:
         broker = KeyValueBroker(servers=servers, replication_factor=k)
-    except CustomBrokerConnectionException as e:
+    except (CustomBrokerConnectionException, CustomValidationException) as e:
         print(f"{e}", file=sys.stderr)
         sys.exit(1)
 

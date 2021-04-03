@@ -146,8 +146,9 @@ class KeyValueBroker:
         """
         if len(self.online_servers) < self.replication_factor:
             print_warning_messages(
-                "WARNING: online servers: {}/{}".format(
-                    len(self.online_servers), len(self.servers)
+                "WARNING: online servers: {}/{}.\nReplication factor is {} and is not guaranteed that the "
+                "available servers will yield correct results".format(
+                    len(self.online_servers), len(self.servers), self.replication_factor
                 )
             )
 

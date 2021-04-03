@@ -42,7 +42,7 @@ def validate_ip_port(ip_address: str, port: str) -> None:
     try:
         inet_aton(ip_address)
     except socket_error as e:
-        raise e
+        raise CustomValidationException(e)
 
 
 def parse_command(command: str) -> Tuple:
@@ -137,7 +137,7 @@ def read_servers_from_file(file) -> List[tuple]:
         server_parts = line.split()
         try:
             validate_ip_port(ip_address=server_parts[0], port=server_parts[1])
-        except (CustomValidationException, ValueError, socket_error) as e:
+        except (CustomValidationException, ValueError) as e:
             print(f"{e}\nServer ignored...")
             continue
         servers.append((server_parts[0], int(server_parts[1])))
@@ -197,10 +197,18 @@ def list_of_dicts_to_file(list_of_dicts: List[dict]) -> None:
 
 
 def print_warning_messages(message: str) -> None:
+    """Helper function to print warning messages with Click's styling
+    :param message: The message to print
+    :return: None
+    """
     click.echo(click.style(message, fg="red"))
 
 
 def merge_server_results(results: List[str]) -> str:
+    """Given a list of server's responses returns the response that the user wants to see.
+    :param results: A list of responses ['{test: 123}', 'NOT FOUND', 'NOT FOUND', 'ERROR']
+    :return: From the list above it will return '{test: 123}'
+    """
     final_result = ""
     results = set(results)
     for item in results:
