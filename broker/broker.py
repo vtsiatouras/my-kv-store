@@ -1,3 +1,4 @@
+import logging
 import socket
 import time
 import multiprocessing as mp
@@ -11,6 +12,8 @@ from tools.general_tools import (
     merge_server_results,
     CustomBrokerConnectionException,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class KeyValueBroker:
@@ -51,7 +54,7 @@ class KeyValueBroker:
                     self.pause_cond.wait()
             # Server checking
             self.__servers_check(raise_connection_error=False)
-            time.sleep(2)
+            time.sleep(10)
 
     def __pause_watchdog(self) -> None:
         """Pauses daemon service
@@ -96,7 +99,6 @@ class KeyValueBroker:
         :return: The response of the server
         """
         ip, port, payload = args
-        print(ip, port)
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             try:
                 # Connect to server and send data
@@ -116,7 +118,7 @@ class KeyValueBroker:
                 return received
 
             except (ConnectionRefusedError, ConnectionResetError) as e:
-                print(f"Server {ip}:{port} not reachable\n{e}")
+                logger.warning(f"Server {ip}:{port} not reachable\n{e}")
                 return "CONNECTION REFUSED"
 
     def __send_request_to_servers(

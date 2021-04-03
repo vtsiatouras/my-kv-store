@@ -212,7 +212,7 @@ def merge_server_results(results: List[str]) -> str:
     final_result = ""
     results = set(results)
     for item in results:
-        if item != "NOT FOUND" and item != "ERROR":
+        if item != "NOT FOUND" and item != "ERROR" and item != "CONNECTION REFUSED":
             return item
         final_result = item
 

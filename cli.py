@@ -1,8 +1,10 @@
+import logging
 import sys
 import click
 
 from data_generator.data_generator import generated_key_value_pairs
 from broker.broker import KeyValueBroker
+from loggers.custom_loggers import setup_logger
 from server.server import KeyValueServer
 from tools.general_tools import (
     read_keys_and_types_from_file,
@@ -87,6 +89,9 @@ def create_data(n, d, m, l, k):
 @click.option("-p", prompt=True, required=True, type=click.INT, help="The port")
 @cli.command()
 def kv_server(a, p):
+    # Set up logger
+    setup_logger(server=True)
+    logging.getLogger(__name__)
     validate_ip_port(ip_address=a, port=p)
     server = KeyValueServer(server_address=(a, p))
     server.serve()
@@ -112,22 +117,27 @@ def kv_server(a, p):
 )
 @cli.command()
 def kv_broker(s, i, k):
+    # Set up logger
+    setup_logger(server=False)
+    logger = logging.getLogger(__name__)
+
     servers = read_servers_from_file(s)
-    print(f"Servers to connect: {servers}")
+    # print(f"Servers to connect: {servers}")
+    logger.info(f"Servers to connect: {servers}")
     if not 1 <= k <= len(servers):
-        print(f"-k should be between 1 to {len(servers)}", file=sys.stderr)
+        logger.error(f"-k should be between 1 to {len(servers)}")
         sys.exit(1)
 
     try:
         broker = KeyValueBroker(servers=servers, replication_factor=k)
     except (CustomBrokerConnectionException, CustomValidationException) as e:
-        print(f"{e}", file=sys.stderr)
+        logger.error(f"{e}")
         sys.exit(1)
 
     if i:
-        click.echo("Reading data from file...")
+        logger.info("Reading data from file...")
         serialized_data_to_index = read_data_from_file(i)
-        click.echo("Sending data to servers...")
+        logger.info("Sending data to servers...")
         broker.index_procedure(serialized_data_to_index)
 
     while True:
@@ -138,7 +148,7 @@ def kv_broker(s, i, k):
             result = broker.execute_command(*serialized_cmd)
             click.echo(result)
         except CustomValidationException as e:
-            print(e, file=sys.stderr)
+            logger.info(e)
             continue
 
 

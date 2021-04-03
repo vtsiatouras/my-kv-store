@@ -1,4 +1,4 @@
-import sys
+import logging
 from socketserver import StreamRequestHandler, TCPServer
 from typing import Tuple, Any
 
@@ -8,6 +8,8 @@ from tools.general_tools import (
     parse_command_for_server,
     CustomValidationException,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class RequestHandler(StreamRequestHandler):
@@ -40,7 +42,7 @@ class KeyValueServer(TCPServer):
     def process_command(self, client_address: Any, payload: str) -> str:
         try:
             command, data = parse_command_for_server(payload)
-            print(f"{client_address} invoked {command} {data}")
+            logger.info(f"Server:{self.server_address} received from client {client_address}: {command} {data}")
             if command in ["GET", "QUERY"]:
                 # Maybe it is redundant but just check in any case...
                 if command == "GET" and len(data) > 1:
@@ -59,5 +61,5 @@ class KeyValueServer(TCPServer):
             else:
                 return "ERROR"
         except CustomValidationException as e:
-            print(e, file=sys.stderr)
+            logger.error(e)
             return "ERROR"
