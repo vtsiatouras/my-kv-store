@@ -54,10 +54,16 @@ class KeyValueBroker:
             time.sleep(2)
 
     def __pause_watchdog(self) -> None:
+        """Pauses daemon service
+        :return: None
+        """
         self.pause_daemon = True
         self.pause_cond.acquire()
 
     def __resume_watchdog(self) -> None:
+        """Resumes daemon service
+        :return:
+        """
         self.pause_daemon = False
         self.pause_cond.notify()
         self.pause_cond.release()
@@ -77,7 +83,9 @@ class KeyValueBroker:
                         self.online_servers.append(server)
                 except (ConnectionRefusedError, ConnectionResetError) as e:
                     if raise_connection_error:
-                        raise CustomBrokerConnectionException(f'Server {ip}:{port} not reachable.\n{e}')
+                        raise CustomBrokerConnectionException(
+                            f"Server {ip}:{port} not reachable.\n{e}"
+                        )
                     if server in self.online_servers:
                         self.online_servers.remove(server)
 
