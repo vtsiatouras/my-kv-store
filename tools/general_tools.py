@@ -9,6 +9,10 @@ class CustomValidationException(Exception):
     pass
 
 
+class CustomBrokerConnectionException(Exception):
+    pass
+
+
 def validate_keyfile_types(keyfile_type: str) -> None:
     """Validates if a given type from a key file is string", "float" or "int"
     :param keyfile_type: The type to check
@@ -48,6 +52,7 @@ def parse_command(command: str) -> Tuple:
     serialized input data
     """
     command_parts = command.split(" ", 1)
+    command_parts[0] = command_parts[0].upper()
     if command_parts[0] not in ["GET", "QUERY", "DELETE", "PUT"]:
         raise CustomValidationException(
             'Available commands are: "GET", "QUERY", "DELETE", "PUT"'
@@ -193,3 +198,14 @@ def list_of_dicts_to_file(list_of_dicts: List[dict]) -> None:
 
 def print_warning_messages(message: str) -> None:
     click.echo(click.style(message, fg="red"))
+
+
+def merge_server_results(results: List[str]) -> str:
+    final_result = ""
+    results = set(results)
+    for item in results:
+        if item != "NOT FOUND" and item != "ERROR":
+            return item
+        final_result = item
+
+    return final_result
