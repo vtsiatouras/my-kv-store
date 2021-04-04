@@ -37,7 +37,7 @@ Then you can enable the python environment with:
 pipenv shell
 ```
 
-All commands from this point forward require the python environment to be enabled.
+**All commands from this point forward require the python environment to be enabled.**
 
 
 ## Usage
@@ -82,11 +82,7 @@ Although you may have noticed that in the mock data above many keys have as valu
 This is required by the given specification to add a small probability to create nested k/v pairs in a maximum depth 
 and with maximum number of pairs.
 
-**Usage**
-
-Example:
-
-_with activated virtual environment_
+**Example:**
 
 ```bash
 python cli.py create-data -n 1000 -d 5 -m 5 -l 5 -k keyFile.txt
@@ -119,11 +115,7 @@ The below paradigm presents how k/v pairs are stored internally.
 
 As you have noticed in the diagram above, the nested k/v pairs are stored to nested Trie indices too, increasing the efficiency of the search operation.
 
-**Usage**
-
-Example:
-
-_with activated virtual environment_
+**Example:**
 
 ```bash
 python cli.py kv-server -a 127.0.0.1 -p 5000
@@ -140,12 +132,8 @@ about their state, and the user will be informed if many servers are unreachable
 checks in every 2 seconds all the servers. Also, the broker in order to push a command to the N number of servers, will execute the "_establish connection, 
 send request, receive results & close connection_" procedure in parallel. This design choice allows us to send a given request to many servers very quickly,
 without maintaining continuous connections with the servers throughout the runtime of the broker.
- 
- **Usage**
 
-Example:
-
-_with activated virtual environment_
+**Example:**
 
 ```bash
 python cli.py kv-broker -s servers.txt -k 2 -i dataset.txt
