@@ -137,8 +137,8 @@ python cli.py kv-server -a 127.0.0.1 -p 5000
 This module is the main interface between the user and the servers. In order to avoid data loss and have a continuous backup plan in case of 
 failure of a server, broker replicates the data we want to store in a number of servers that the user defines. The servers are checked repeatedly
 about their state, and the user will be informed if many servers are unreachable. The way this is implemented is by having a daemon service that 
-checks in every 2 seconds all the servers. Also, the broker in order to push a command to the N number of servers, will execute the _establish connection, 
-send request, receive results & close connection_ procedure in parallel. This design choice allows us to send a given request to many servers very quickly,
+checks in every 2 seconds all the servers. Also, the broker in order to push a command to the N number of servers, will execute the "_establish connection, 
+send request, receive results & close connection_" procedure in parallel. This design choice allows us to send a given request to many servers very quickly,
 without maintaining continuous connections with the servers throughout the runtime of the broker.
  
  **Usage**
