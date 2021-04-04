@@ -8,7 +8,6 @@ from typing import List, Union, Optional
 from random import sample
 from tools.general_tools import (
     validate_ip_port,
-    print_warning_messages,
     merge_server_results,
     CustomBrokerConnectionException,
 )
@@ -147,7 +146,7 @@ class KeyValueBroker:
         :return: None
         """
         if len(self.online_servers) < self.replication_factor:
-            print_warning_messages(
+            logger.warning(
                 "WARNING: online servers: {}/{}.\nReplication factor is {} and is not guaranteed that the "
                 "available servers will yield correct results".format(
                     len(self.online_servers), len(self.servers), self.replication_factor
@@ -170,7 +169,7 @@ class KeyValueBroker:
         else:
             # Prevent delete operation when we have even one server down!
             if command == "DELETE" and (self.online_servers != self.servers):
-                print_warning_messages(
+                logger.warning(
                     "WARNING: online servers: {}/{} ABORTING DELETE OPERATION".format(
                         len(self.online_servers), len(self.servers)
                     )

@@ -1,8 +1,10 @@
 import ast
-import click
+import logging
 
 from typing import List, Tuple, Dict
 from socket import inet_aton, error as socket_error
+
+logger = logging.getLogger(__name__)
 
 
 class CustomValidationException(Exception):
@@ -102,7 +104,7 @@ def read_data_from_file(file) -> List:
         try:
             data.append(data_string_to_dict(line))
         except CustomValidationException as e:
-            print(f"{e}\nRecord ignored...")
+            logger.warning(f"{e}\nRecord ignored...")
             continue
 
     return data
@@ -138,7 +140,7 @@ def read_servers_from_file(file) -> List[tuple]:
         try:
             validate_ip_port(ip_address=server_parts[0], port=server_parts[1])
         except (CustomValidationException, ValueError) as e:
-            print(f"{e}\nServer ignored...")
+            logger.warning(f"{e}\nServer ignored...")
             continue
         servers.append((server_parts[0], int(server_parts[1])))
 
@@ -164,10 +166,13 @@ def data_string_to_dict(string_data: str) -> Dict:
     try:
         dictionary = ast.literal_eval(str_dict)
     except (ValueError, SyntaxError, TypeError) as e:
-        raise CustomValidationException(e)
+        raise CustomValidationException(
+            "Data should be complaint to the following pattern\n\t"
+            "'<key>':{'key_1': 'value_1'; 'key_1': 'value_2';}"
+        )
     if type(dictionary) is not dict:
         raise CustomValidationException(
-            "Data should be complaint to the following pattern\n"
+            "Data should be complaint to the following pattern\n\t"
             "'<key>': {'key_1': 'value_1'; 'key_1': 'value_2';}"
         )
 
@@ -194,14 +199,6 @@ def list_of_dicts_to_file(list_of_dicts: List[dict]) -> None:
             # Cast dict to str & remove curly braces from the start and the end
             line = str(dictionary)[1:-1].replace(",", ";")
             outfile.write(f"{line}\n")
-
-
-def print_warning_messages(message: str) -> None:
-    """Helper function to print warning messages with Click's styling
-    :param message: The message to print
-    :return: None
-    """
-    click.echo(click.style(message, fg="red"))
 
 
 def merge_server_results(results: List[str]) -> str:

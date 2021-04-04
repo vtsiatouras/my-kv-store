@@ -42,7 +42,9 @@ class KeyValueServer(TCPServer):
     def process_command(self, client_address: Any, payload: str) -> str:
         try:
             command, data = parse_command_for_server(payload)
-            logger.info(f"Server:{self.server_address} received from client {client_address}: {command} {data}")
+            logger.info(
+                f"Server:{self.server_address} received from client {client_address}: {command} {data}"
+            )
             if command in ["GET", "QUERY"]:
                 # Maybe it is redundant but just check in any case...
                 if command == "GET" and len(data) > 1:

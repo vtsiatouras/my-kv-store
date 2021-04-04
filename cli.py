@@ -148,7 +148,7 @@ def kv_broker(s, i, k):
             result = broker.execute_command(*serialized_cmd)
             click.echo(result)
         except CustomValidationException as e:
-            logger.info(e)
+            logger.warning(e)
             continue
 
 
