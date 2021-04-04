@@ -111,7 +111,9 @@ The below paradigm presents how k/v pairs are stored internally.
 'test': {'any': 'value2'}
 ```
 
-todo insert image here
+<p align="center">
+  <img src="https://github.com/VangelisTsiatouras/my-kv-store/blob/main/assist_material/tries.png">
+</p>
 
 As you have noticed in the diagram above, the nested k/v pairs are stored to nested Trie indices too, increasing the efficiency of the search operation.
 
@@ -183,13 +185,20 @@ Below there are some screenshots on how the CLI looks like.
 
 _Normal execution_
 
+![screen1](https://github.com/VangelisTsiatouras/my-kv-store/blob/main/assist_material/screen_1.png)
 
 _Error when starting with server down_
 
+![screen2](https://github.com/VangelisTsiatouras/my-kv-store/blob/main/assist_material/screen_3.png)
+
 _Some syntax errors_
+
+![screen3](https://github.com/VangelisTsiatouras/my-kv-store/blob/main/assist_material/screen_4.png)
 
 _Warning when we have a few replicated servers_
 
+![screen4](https://github.com/VangelisTsiatouras/my-kv-store/blob/main/assist_material/screen_2.png)
+
 _Warning at delete operation when having at least 1 server down_ 
 
-
+![screen5](https://github.com/VangelisTsiatouras/my-kv-store/blob/main/assist_material/screen_5.png)
