@@ -16,7 +16,12 @@ def get_values(value_type: str, max_word_length: int) -> Union[str, int, float]:
         return uniform(0.0, 1000.0)
     elif value_type == "string":
         word_length = randint(1, max_word_length)
-        return "".join(choices(string.ascii_uppercase + string.digits, k=word_length))
+        return "".join(
+            choices(
+                string.ascii_uppercase + string.ascii_lowercase + string.digits,
+                k=word_length,
+            )
+        )
 
 
 def create_dictionary(
