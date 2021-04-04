@@ -107,8 +107,8 @@ the data and retrieve them efficiently the server uses an internal in memory dat
 The below paradigm presents how k/v pairs are stored internally.
 
 ```
-'text': {'ant': {'sub': 1}; 'and': 'value1'}
-'test': {'any': 'value2'}
+'text': {'ant': {'sub': 1}; 'and': 'value2'}
+'test': {'any': 'value3'}
 ```
 
 <p align="center">
@@ -124,7 +124,7 @@ Example:
 _with activated virtual environment_
 
 ```bash
-kv-server -a 127.0.0.1 -p 5000
+python cli.py kv-server -a 127.0.0.1 -p 5000
 ```
 
 - `-a`: The IP address
@@ -146,7 +146,7 @@ Example:
 _with activated virtual environment_
 
 ```bash
-kv-broker -s servers.txt -k 2 -i dataset.txt
+python cli.py kv-broker -s servers.txt -k 2 -i dataset.txt
 ```
 
 - `-s`: File that indicates the servers to connect
