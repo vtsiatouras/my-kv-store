@@ -168,12 +168,12 @@ def data_string_to_dict(string_data: str) -> Dict:
     except (ValueError, SyntaxError, TypeError) as e:
         raise CustomValidationException(
             "Data should be complaint to the following pattern\n\t"
-            "'<key>':{'key_1': 'value_1'; 'key_1': 'value_2';}"
+            "'<key>':{'key_1': 'value_1'; 'key_2': 'value_2';}"
         )
     if type(dictionary) is not dict:
         raise CustomValidationException(
             "Data should be complaint to the following pattern\n\t"
-            "'<key>': {'key_1': 'value_1'; 'key_1': 'value_2';}"
+            "'<key>': {'key_1': 'value_1'; 'key_2': 'value_2';}"
         )
 
     # Check if the inserted dict is not one level: 'key': 'value'
@@ -181,7 +181,7 @@ def data_string_to_dict(string_data: str) -> Dict:
         if type(v) is not dict:
             raise CustomValidationException(
                 "Data should be complaint to the following pattern\n"
-                "'<key>': {'key_1': 'value_1'; 'key_1': 'value_2';}\n"
+                "'<key>': {'key_1': 'value_1'; 'key_2': 'value_2';}\n"
                 "No single level key/values are allowed (e.g. 'key_1': 'value_1')"
             )
 
