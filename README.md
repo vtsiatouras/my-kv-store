@@ -1,7 +1,7 @@
 # My KeyValue Store
 
-This project is a custom implementation of a Key Value Store (Redis like) and is not intented for any production usage. 
-Below you can find enlisted installation instructions, how to use this app & some of the key parts of the implementation of this project
+This project is a custom implementation of a Key Value Store (Redis like) and is not intended for any production usage. 
+Below you can find enlisted installation instructions, how to use this app & some key parts of the implementation of this project
 that are worth to mention.
 
 
@@ -46,7 +46,7 @@ The project contains 3 different submodules that can be manipulated through the 
 - Key Value Server: accepts and executes given queries
 - Key Value Broker: manages the available connections to Key Value servers
 
-So, let's teardown briefly each part!
+So, lets teardown briefly each part!
 
 ### Data Creation module
 
@@ -61,8 +61,9 @@ The following is an example of how the generated data looks like.
 'person_4': {'height': 739.8379923345368}
 ```
 
-As you have noticed these key/value pairs are non-sense (remember we want only to stress test the database with mock data). In order to actually generate data
-by yourself, initially you should prepare a file that contain the basic keys to use and their type. 
+As you have noticed these key/value pairs are non-sense (remember we want only to stress test the database with mock
+data). In order to actually generate data by yourself, initially you should prepare a file that contain the basic 
+keys to use and their type. 
 
 Here you can see an example of this key-file:
 
@@ -74,9 +75,10 @@ weight float
 street string
 ```
 
-The data generator validates if any of these keys have an unknown data type. The accepted types are `string`, `int` & `float`. Althgouh you may have noticed
-that in the mock data above many keys have as value an another nested key/value pair. This is required by the given specification to add a small probability
-to create nested k/v pairs in a maximum depth and with maximum number of pairs.
+The data generator validates if any of these keys have an unknown data type. The accepted types are `string`, `int` & `float`. 
+Although you may have noticed that in the mock data above many keys have as value a nested key/value pair. 
+This is required by the given specification to add a small probability to create nested k/v pairs in a maximum depth 
+and with maximum number of pairs.
 
 **Usage**
 
@@ -95,12 +97,12 @@ python cli.py create-data -n 1000 -d 5 -m 5 -l 5 -k keyFile.txt
 - `-l`: Is the maximum length of a string value whenever you need to generate a string. For example 4 means that we can generate Strings 
   of up to length 4 (e.g. "ab", "abcd", "a"). We should not generate empty strings (i.e. "" is not correct). Strings can be only letters 
   (upper and lowercase) and numbers. No symbols.
-- `-k`: A file containing a space-separated list of key names and their data types that we can potentially use for creating data.
+- `-k`: A file containing a space-separated list of key names, and their data types that we can potentially use for creating data.
 
 ### Key Value Server module
 
 This module contains the "heart" of this project. This is a typical TCP server that accepts requests from a broker through socket level. In order to store
-the data and retrieve them efficently the server uses an interal in memory data-structure that is based on [Tries](https://en.wikipedia.org/wiki/Trie).
+the data and retrieve them efficiently the server uses an internal in memory data-structure that is based on [Tries](https://en.wikipedia.org/wiki/Trie).
 
 The below paradigm presents how k/v pairs are stored internally.
 
@@ -130,10 +132,10 @@ kv-server -a 127.0.0.1 -p 5000
 
 This module is the main interface between the user and the servers. In order to avoid data loss and have a continuous backup plan in case of 
 failure of a server, broker replicates the data we want to store in a number of servers that the user defines. The servers are checked repeatedly
-about their state and the user will be informed if many servers are unreachable. The way this is implemented is by having a daemon service that 
-checks in every 2 seconds all the servers. Also the broker in order to push a command to the N number of servers, will execute the _establish connection, 
+about their state, and the user will be informed if many servers are unreachable. The way this is implemented is by having a daemon service that 
+checks in every 2 seconds all the servers. Also, the broker in order to push a command to the N number of servers, will execute the _establish connection, 
 send request, receive results & close connection_ procedure in parallel. This design choice allows us to send a given request to many servers very quickly,
-without maintaining continuous connections with the servers through out the runtime of the broker.
+without maintaining continuous connections with the servers throughout the runtime of the broker.
  
  **Usage**
 
@@ -149,8 +151,8 @@ kv-broker -s servers.txt -k 2 -i dataset.txt
 - `-k`: Replication factor, how many different servers will have the same replicated data
 - `-i`: File that contains data to store [Optional]
 
-The `servers.txt` is a file that contains IP, port pairs, it is validated that the IP/ports are correct and the the broker will not start if any of the
-servers defined is not reachable (I decided to make it a bit strict). Also the broker after the initialization procedure will provide to the user a 
+The `servers.txt` is a file that contains IP, port pairs, it is validated that the IP/ports are correct, and the broker will not start if any of the
+servers defined is not reachable (I decided to make it a bit strict). Also, the broker after the initialization procedure will provide to the user a 
 command prompt which can be used to execute various operations. These operations are:
 
 ```
@@ -166,14 +168,28 @@ Some things about the accepted syntax.
 
 The accepted pattern of defining a k/v pair at `PUT` command is:`'<top_level_key>': {'<key1>':<value1> ; '<key2>':<value2>}`, where top `top_level_key` 
 is required to be written alone without curly brackets, use `;` to separate the k/v pairs and in `value` the user can put either an actual string/int/float 
-value or a nested k/v pair. Also all keys should be enclosed with quotes `'`.
+value, or a nested k/v pair. Also, all keys should be enclosed with quotes `'`.
 
 The accepted pattern of `GET` and `DELETE` is just write down any key you want to delete without quotes or anything
 
 Finally, the accepted pattern of `QUERY` is to write a number of keys separated with dot `.` without quotes.
 
+Concluding, I must refer that on `PUT` operation the broker pushes the given k/v pair to k randomly picked servers 
+and also that `DELETE` operation requires all the servers to be available.  
+
 ### Execution Screenshots
 
 Below there are some screenshots on how the CLI looks like.
+
+_Normal execution_
+
+
+_Error when starting with server down_
+
+_Some syntax errors_
+
+_Warning when we have a few replicated servers_
+
+_Warning at delete operation when having at least 1 server down_ 
 
 
