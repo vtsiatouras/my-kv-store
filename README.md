@@ -124,7 +124,7 @@ Example:
 _with activated virtual environment_
 
 ```bash
-kv-server -a 127.0.0.1 -p 5000
+python cli.py kv-server -a 127.0.0.1 -p 5000
 ```
 
 - `-a`: The IP address
@@ -146,7 +146,7 @@ Example:
 _with activated virtual environment_
 
 ```bash
-kv-broker -s servers.txt -k 2 -i dataset.txt
+python cli.py kv-broker -s servers.txt -k 2 -i dataset.txt
 ```
 
 - `-s`: File that indicates the servers to connect
