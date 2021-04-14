@@ -1,6 +1,6 @@
 # My KeyValue Store
 
-[![python](https://img.shields.io/badge/python-3.7%20%7C%203.8%20%7C%203.9-blue.svg)](https://img.shields.io/badge/python-3.7%20%7C%203.8%20%7C%203.9-blue.svg)   [![code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![python](https://img.shields.io/badge/Python-3.7%20%7C%203.8%20%7C%203.9-blue.svg?logo=python&logoColor=white)](https://www.python.org/)   [![code style: black](https://img.shields.io/badge/Code%20Style-black-000000.svg)](https://github.com/psf/black)
 
 This project is a custom implementation of a Key Value Store (Redis like) and is not intended for any production usage. 
 Below you can find enlisted installation instructions, how to use this app & some key parts of the implementation of this project
